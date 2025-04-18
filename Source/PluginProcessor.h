@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_formats/juce_audio_formats.h>
 // #include 
 
 //==============================================================================
@@ -43,7 +44,26 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "parameters", createParameterLayout() };
+
 private:
+
+    juce::AudioParameterFloat* fadeIn{nullptr};
+    juce::AudioParameterFloat* fadeOut{nullptr};
+    juce::AudioParameterFloat* startIR{nullptr};
+    juce::AudioParameterFloat* endIR{nullptr};
+    juce::AudioParameterFloat* stretch{nullptr};
+    juce::AudioParameterFloat* predelay{nullptr};
+    juce::AudioParameterFloat* tone{nullptr};
+    juce::AudioParameterFloat* feedback{nullptr};
+    juce::AudioParameterFloat* mix{nullptr};
+    
+    juce::AudioParameterBool* reverse{nullptr};
+    juce::AudioParameterBool* power{nullptr};
+
+    juce::AudioFormatManager manager;
+    std::unique_ptr<juce::AudioFormatReader> reader{ nullptr };
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

@@ -12,6 +12,21 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
                      #endif
                        )
 {
+    fadeIn = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("fadeIn"));
+    fadeOut = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("fadeOut"));
+    startIR = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("startIR"));
+    endIR = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("endIR"));
+    stretch = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("stretch"));
+    predelay = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("predelay"));
+    tone = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("tone"));
+    feedback = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("feedback"));
+    mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
+
+    reverse = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("reverse"));
+    power = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("power"));
+
+    manager.registerBasicFormats();
+
 }
 
 AudioPluginAudioProcessor::~AudioPluginAudioProcessor()
@@ -126,31 +141,13 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 {
     juce::ignoreUnused (midiMessages);
 
+    if(!power->get())
+        return;
+
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
-    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-        buffer.clear (i, 0, buffer.getNumSamples());
-
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
 }
 
 //==============================================================================
@@ -167,17 +164,42 @@ juce::AudioProcessorEditor* AudioPluginAudioProcessor::createEditor()
 //==============================================================================
 void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused (destData);
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused (data, sizeInBytes);
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid())
+        apvts.replaceState(tree);
+}
+
+juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::createParameterLayout()
+{
+    using namespace juce;
+    AudioProcessorValueTreeState::ParameterLayout layout;
+    auto zeroToOneRange = NormalisableRange<float>(0,1,.01);
+    auto stretchRange = NormalisableRange<float>(.5,2, .01);
+    auto predealyRangeNEEDSFIXING = NormalisableRange<float>(0,5000,.01); //this needs to change to be more logarithmic, will come back later. skew may fix
+    auto toneRange = NormalisableRange<float>(-1,1,.01); //Subject to change
+    auto feedbackRange = NormalisableRange<float>(-1,1,.01); //just in case tone changes
+
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeIn",1}, "Fade In", zeroToOneRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeOut",1}, "Fade Out", zeroToOneRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"startIR",1}, "Start Position", zeroToOneRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"endIR",1}, "End Position", zeroToOneRange, 1));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"stretch",1}, "Stretch", stretchRange, 1));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"predelay",1}, "preDelay Range", predealyRangeNEEDSFIXING, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"tone",1}, "Tone", toneRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"feedback",1}, "Feedback", feedbackRange, 0));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"mix",1}, "Mix", zeroToOneRange, 1));
+
+    layout.add(std::make_unique<AudioParameterBool>(ParameterID{"reverse",1}, "Reverse", false));
+    layout.add(std::make_unique<AudioParameterBool>(ParameterID{"power",1}, "Power", true));
+
+
+    return layout;
 }
 
 //==============================================================================
