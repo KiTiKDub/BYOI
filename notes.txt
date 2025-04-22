@@ -1,0 +1,21 @@
+1) I need to create a start and end trim. This can be done by seeing how many samples are ahead in releation to the window? 
+   I could probably do a percantage of the window that the plugin is, so those parameters can be from 0 to 1, and then go into that percantage
+   based on the location on the screen
+
+2) To keep it like kilohearts, I can do color effect on the output display, and remove it when it's trimmed off
+
+3) Fade in/fade out will also be perceantage base. I can do 100% fade in goes over the whole sample length, and then a gradule fade from that. 
+   Same with fade out but reverse, I will need to make a new type of knob for this to show just the value. 
+   I can modify the bar from Krush to just not have any graphics.
+
+4) I could do a stretch, maybe I can grab another libary for that, might as well learn it too
+
+5) To reverse, I can just load it into my waveform and call reverse on it. will have to fiddle but it's built in
+
+6)Tone knob is just a low pass filter, I can probably make it some sort of shelf if I want to bother
+
+7)IDK how I'll implement feedback, I think I'll add it if I feel like it
+
+8) Pre delay will be the delay before the effect starts, which I guess is like suspending processing? So I would need to know if there is any audio passing thru?
+   Or somehow find out when I should suspend the processing. 
+   This link might be helpful if we need to suspend processing : https://forum.juce.com/t/is-there-way-to-recognize-playing-music-in-host/16575
