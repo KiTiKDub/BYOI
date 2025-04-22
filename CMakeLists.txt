@@ -25,27 +25,31 @@ FetchContent_Declare(
   GIT_TAG master
   GIT_SHALLOW ON
 )
-FetchContent_Declare( #If I fork and add a cmakelists to this, I still have to build or something, right?
+FetchContent_Declare(
         FFTC
         GIT_REPOSITORY https://github.com/HiFi-LoFi/FFTConvolver.git
         GIT_TAG f2cdeb04c42141d2caec19ca4f137398b2a76b85
         GIT_SHALLOW ON
 )
-FetchContent_MakeAvailable(juce FFTC)
+FetchContent_Declare(
+        kitik-utility
+        GIT_REPOSITORY https://github.com/KiTiKDub/KiTiK-JUCE-Utils.git
+        GIT_TAG master
+        GIT_SHALLOW ON
+)
+FetchContent_MakeAvailable(juce FFTC kitik-utility)
 
-set(FFTC_SOURCE_DIR ${CMAKE_SOURCE_DIR}/build/_deps/fftc-src) # don't know why it wouldn't link properly but it fixed it 
-message(STATUS "FFTConvolver source dir: ${FFTC_SOURCE_DIR}")
-
+message(STATUS "Internet says this will work: ${fftc_SOURCE_DIR}") #THE libary needs to be all lower case
 
 add_library(FFTConvolver_lib STATIC
-                ${FFTC_SOURCE_DIR}/AudioFFT.cpp
-                ${FFTC_SOURCE_DIR}/AudioFFT.h
-                ${FFTC_SOURCE_DIR}/FFTConvolver.cpp
-                ${FFTC_SOURCE_DIR}/FFTConvolver.h
-                ${FFTC_SOURCE_DIR}/TwoStageFFTConvolver.cpp
-                ${FFTC_SOURCE_DIR}/TwoStageFFTConvolver.h
-                ${FFTC_SOURCE_DIR}/Utilities.cpp
-                ${FFTC_SOURCE_DIR}/Utilities.h )                       
+                ${fftc_SOURCE_DIR}/AudioFFT.cpp
+                ${fftc_SOURCE_DIR}/AudioFFT.h
+                ${fftc_SOURCE_DIR}/FFTConvolver.cpp
+                ${fftc_SOURCE_DIR}/FFTConvolver.h
+                ${fftc_SOURCE_DIR}/TwoStageFFTConvolver.cpp
+                ${fftc_SOURCE_DIR}/TwoStageFFTConvolver.h
+                ${fftc_SOURCE_DIR}/Utilities.cpp
+                ${fftc_SOURCE_DIR}/Utilities.h )                       
 
 # Make sure you include any new source files here
 set(SourceFiles
@@ -53,17 +57,6 @@ set(SourceFiles
         Source/PluginEditor.h
         Source/PluginProcessor.cpp
         Source/PluginProcessor.h
-	Source/GUI/KitikLevelMeter.h
-        Source/GUI/KitikLookAndFeel.cpp
-        Source/GUI/KitikLookAndFeel.h
-        Source/GUI/RotarySliderWithLabels.cpp
-        Source/GUI/RotarySliderWithLabels.h
-        Source/GUI/SliderWithLabels.cpp
-        Source/GUI/SliderWithLabels.h
-        Source/Utility/PresetManager.cpp
-        Source/Utility/PresetManager.h
-        Source/Utility/PresetPanel.cpp
-        Source/Utility/PresetPanel.h
 )
 
 # Change these to your own preferences
@@ -109,6 +102,7 @@ target_compile_definitions(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
         FFTConvolver_lib
+        kitik-utils
         Assets
         juce::juce_analytics
         juce::juce_audio_basics
@@ -129,5 +123,6 @@ target_link_libraries(${PROJECT_NAME}
         juce::juce_recommended_warning_flags
 )
 
-target_include_directories(FFTConvolver_lib PUBLIC ${FFTC_SOURCE_DIR})
+target_include_directories(FFTConvolver_lib PUBLIC ${fftc_SOURCE_DIR})
+target_include_directories(kitik-utils PUBLIC ${kitik-utility_SOURCE_DIR})
 
