@@ -98,6 +98,18 @@ target_compile_definitions(${PROJECT_NAME}
         JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
+# Link kitik-utils to JUCE libraries
+target_link_libraries(kitik-utils
+    PUBLIC
+        juce::juce_core
+        juce::juce_audio_basics
+        juce::juce_audio_processors
+        juce::juce_dsp
+)
+
+# Ensure kitik-utils has access to JUCE include directories
+target_include_directories(kitik-utils PUBLIC ${juce_SOURCE_DIR})
+
 # JUCE libraries to bring into our project
 target_link_libraries(${PROJECT_NAME}
         PUBLIC
