@@ -227,14 +227,13 @@ void AudioPluginAudioProcessor::setMonoWaveform()
     waveformMono.setSize(1, waveform.getNumSamples());
     waveformMono.clear();
 
-    auto* leftData = waveform.getWritePointer(0);
-    auto* rightData = waveform.getWritePointer(1);
-    auto* monoData = waveformMono.getWritePointer(0);
+    waveformMono.copyFrom(0, 0, waveform, 0, 0, waveform.getNumSamples());
+    waveformMono.applyGain(.5f);
+    waveformMono.addFrom(0,0, waveform, 1, 0, waveform.getNumSamples(), .5f);
 
-    for(int i = 0; i < waveform.getNumSamples(); i++)
-    {
-        monoData[i] = (leftData[i] + rightData[i]) / 2;
-    }
+    auto leftTest = waveform.getSample(0,3000);
+    auto rightTest = waveform.getSample(1,3000);
+    auto monoTest = waveformMono.getSample(0,3000);
 
     writeMonoToFile();
 }
@@ -249,7 +248,7 @@ void AudioPluginAudioProcessor::writeMonoToFile()
     std::unique_ptr<juce::AudioFormatWriter> writer;
     writer.reset(format.createWriterFor(new juce::FileOutputStream(file),
         getSampleRate(),
-        2,
+        1,
         24,
         {},
         0));

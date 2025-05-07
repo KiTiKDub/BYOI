@@ -118,12 +118,6 @@ target_compile_definitions(kitik-utils PUBLIC
     JUCE_VST3_CAN_REPLACE_VST2=0
 )
 
-# target_compile_definitions(${PROJECT_NAME} PUBLIC
-#     JUCE_WEB_BROWSER=0
-#     JUCE_USE_CURL=0
-#     JUCE_VST3_CAN_REPLACE_VST2=0
-# )
-
 # JUCE libraries to bring into our project
 target_link_libraries(${PROJECT_NAME}
     PRIVATE

@@ -13,23 +13,19 @@ DragAndDropComp::~DragAndDropComp()
 void DragAndDropComp::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
+    auto bounds = getLocalBounds();
 
     g.setColour(juce::Colours::whitesmoke);
-    g.drawRect(getLocalBounds());
+    g.drawRect(bounds);
 
-    auto normalFile = audioProcessor.getAudioFile();
-    if(normalFile.exists())
-    {
-        thumbnail.setSource(new juce::FileInputSource(normalFile));
-        thumbnail.drawChannel(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1, 1.f);
-    }
+    auto audioFile = audioProcessor.getMonoImpulseLocation().getChildFile("mono_impulse.wav");
     
-    // auto audioFile = audioProcessor.getMonoImpulseLocation().getChildFile("mono_impulse.wav");
-    // if(audioFile.exists())
-    // {
-    //     thumbnail.setSource(new juce::FileInputSource(audioFile));
-    //     thumbnail.drawChannel(g, getLocalBounds(), 0.0, thumbnail.getTotalLength(), 1, 1.f);
-    // }
+    if(audioFile.exists())
+    {
+        auto shrinkArea = bounds.reduced(5,5);
+        thumbnail.setSource(new juce::FileInputSource(audioFile));
+        thumbnail.drawChannel(g, shrinkArea, 0.0, thumbnail.getTotalLength(), 0, 1.f);
+    }
 }
 
 void DragAndDropComp::resized()
