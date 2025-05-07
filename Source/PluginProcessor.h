@@ -46,8 +46,16 @@ public:
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
     juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "parameters", createParameterLayout() };
+    juce::AudioFormatManager manager;
+
+    void loadAndSaveFile(const juce::String&);
+    juce::File getMonoImpulseLocation();
+    juce::File getAudioFile() const { return audioFile; }
 
 private:
+
+    void setMonoWaveform();
+    void writeMonoToFile();
 
     juce::AudioParameterFloat* fadeIn{nullptr};
     juce::AudioParameterFloat* fadeOut{nullptr};
@@ -62,8 +70,11 @@ private:
     juce::AudioParameterBool* reverse{nullptr};
     juce::AudioParameterBool* power{nullptr};
 
-    juce::AudioFormatManager manager;
     std::unique_ptr<juce::AudioFormatReader> reader{ nullptr };
+
+    juce::AudioBuffer<float> waveform;
+    juce::AudioBuffer<float> waveformMono;
+    juce::File audioFile;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

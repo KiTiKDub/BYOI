@@ -208,3 +208,69 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new AudioPluginAudioProcessor();
 }
+
+void AudioPluginAudioProcessor::loadAndSaveFile(const juce::String& path)
+{
+    audioFile = juce::File(path);
+    reader.reset(manager.createReaderFor(audioFile));
+    reader->sampleRate = getSampleRate();
+
+    int length = static_cast<int>(reader->lengthInSamples);
+    waveform.setSize(2,length);
+    reader->read(&waveform, 0, length, 0, true, true);
+
+    setMonoWaveform();
+}
+
+void AudioPluginAudioProcessor::setMonoWaveform()
+{
+    waveformMono.setSize(1, waveform.getNumSamples());
+    waveformMono.clear();
+
+    auto* leftData = waveform.getWritePointer(0);
+    auto* rightData = waveform.getWritePointer(1);
+    auto* monoData = waveformMono.getWritePointer(0);
+
+    for(int i = 0; i < waveform.getNumSamples(); i++)
+    {
+        monoData[i] = (leftData[i] + rightData[i]) / 2;
+    }
+
+    writeMonoToFile();
+}
+
+void AudioPluginAudioProcessor::writeMonoToFile()
+{
+    juce::WavAudioFormat format;
+    auto directory = getMonoImpulseLocation();
+    auto file = directory.getChildFile("mono_impulse.wav");
+    if (file.exists())
+        file.deleteFile();
+    std::unique_ptr<juce::AudioFormatWriter> writer;
+    writer.reset(format.createWriterFor(new juce::FileOutputStream(file),
+        getSampleRate(),
+        2,
+        24,
+        {},
+        0));
+    if (writer != nullptr)
+        writer->writeFromAudioSampleBuffer(waveformMono, 0, waveformMono.getNumSamples());
+}
+
+juce::File AudioPluginAudioProcessor::getMonoImpulseLocation()
+{
+    #if JUCE_WINDOWS
+        auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile("KiTiK Music");
+    #elif JUCE_MAC
+        auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("KiTiK Music");
+    #elif JUCE_LINUX
+        auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("KiTiK Music");
+    #endif
+
+    auto pluginFolder = kitikFolder.getChildFile("BYOI");
+
+    if (!pluginFolder.exists())
+        pluginFolder.createDirectory();
+
+    return pluginFolder;
+}

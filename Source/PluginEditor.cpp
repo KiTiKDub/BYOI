@@ -12,6 +12,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     addAndMakeVisible(*tone);
     addAndMakeVisible(*feedback);
     addAndMakeVisible(*mix);
+    addAndMakeVisible(dragAndDrop);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -53,6 +54,7 @@ void AudioPluginAudioProcessorEditor::resized()
     tone->setBounds(toneBounds);
     feedback->setBounds(feedbackBounds);
     mix->setBounds(mixBounds);
+    dragAndDrop.setBounds(visualizerBounds);
 }
 
 void AudioPluginAudioProcessorEditor::updateRSWL()

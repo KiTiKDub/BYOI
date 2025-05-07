@@ -75,7 +75,7 @@ juce_add_plugin(${PROJECT_NAME}
     PLUGIN_CODE 
     FORMATS "${FORMATS}"
     PRODUCT_NAME "BYOI"
-    LV2_URI https://github.com/KiTiKDub/BYOI.git
+    LV2URI https://github.com/KiTiKDub/BYOI.git
     LV2_SHARED_LIBARARY_NAME BYOI        
 )
 
