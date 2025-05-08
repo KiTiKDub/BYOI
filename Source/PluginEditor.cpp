@@ -3,15 +3,48 @@
 
 //==============================================================================
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p), audioProcessor(p), preDelayAT(audioProcessor.apvts, "predelay", preDelay),
+      reverseAT(audioProcessor.apvts, "reverse", reverse), tempoAT(audioProcessor.apvts, "tempo", tempo),
+      powerAT(audioProcessor.apvts, "power", power) 
 {
     setLookAndFeel(&lnf);
     updateRSWL();
-    setSize (300, 400);
+    setSize (300, 425);
+    power.setComponentID("Power");
+
+    if (const auto svg = juce::XmlDocument::parse(BinaryData::reverse_svg))
+    {
+        const auto drawable = juce::Drawable::createFromSVG(*svg);
+        reverse.setImages(drawable.get());
+        reverse.setToggleable(true);
+        reverse.setToggleState(false, juce::NotificationType::dontSendNotification);
+        reverse.setClickingTogglesState(true);
+    }
+    if (const auto svgMusic = juce::XmlDocument::parse(BinaryData::music_note_svg))
+    {
+        const auto music = juce::Drawable::createFromSVG(*svgMusic);
+
+        if(const auto svgClock = juce::XmlDocument::parse(BinaryData::clock_svg))
+        {
+            const auto clockDrawing = juce::Drawable::createFromSVG(*svgClock);
+            tempo.setImages(clockDrawing.get(), nullptr, music.get(), nullptr, music.get(), nullptr);
+            tempo.setToggleable(true);
+            tempo.setToggleState(false, juce::NotificationType::dontSendNotification);
+            tempo.setClickingTogglesState(true);
+        }
+    }
 
     addAndMakeVisible(*tone);
     addAndMakeVisible(*feedback);
     addAndMakeVisible(*mix);
+    addAndMakeVisible(*fadeIn);
+    addAndMakeVisible(*stretch);
+    addAndMakeVisible(*fadeOut);
+    addAndMakeVisible(preDelay);
+    addAndMakeVisible(reverse);
+    addAndMakeVisible(tempo);
+    addAndMakeVisible(power);
+    addAndMakeVisible(gumroad);
     addAndMakeVisible(dragAndDrop);
 }
 
@@ -28,15 +61,19 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
 
     g.fillAll(juce::Colours::black);
 
+    auto masterBounds = getLocalBounds().removeFromTop(25);
+    auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .2);
+    auto gumroadBounds = masterBounds.removeFromRight(masterBounds.getWidth() * .25);
+
     auto logo = juce::ImageCache::getFromMemory(BinaryData::KITIK_LOGO_NO_BKGD_png, BinaryData::KITIK_LOGO_NO_BKGD_pngSize);
     //g.drawImage(logo, getLocalBounds().toFloat(), juce::RectanglePlacement::centred);
 
     g.setColour (juce::Colours::white);
-    g.setFont (15.0f);
-    //g.drawFittedText ("KiTiK Plugin Template", getLocalBounds(), juce::Justification::centredTop, 1);
+    g.setFont (25.0f);
+    g.drawFittedText ("BYOI", masterBounds, juce::Justification::centredTop, 1);
 
-    g.drawLine(0,150,getWidth(),150,1.f);
-    g.drawLine(0,325,getWidth(),325,1.f);
+    g.drawLine(0,175,getWidth(),175,1.f);
+    g.drawLine(0,350,getWidth(),350,1.f);
 
 }
 
@@ -44,16 +81,38 @@ void AudioPluginAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
 
-    auto visualizerBounds = bounds.removeFromTop(150);
+    auto visualizerBounds = bounds.removeFromTop(175);
+    auto masterBounds = visualizerBounds.removeFromTop(25);
     auto knobBounds = bounds.removeFromBottom(75);
+
+    auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .2);
+    auto gumroadBounds = masterBounds.removeFromRight(masterBounds.getWidth() * .25);
 
     auto toneBounds = knobBounds.removeFromLeft(knobBounds.getWidth() * .33);
     auto feedbackBounds = knobBounds.removeFromLeft(knobBounds.getWidth() * .5);
     auto mixBounds = knobBounds;
 
+    auto modifyVizBounds = bounds.removeFromTop(bounds.getHeight() * .5);
+
+    auto fadeInBounds = modifyVizBounds.removeFromLeft(modifyVizBounds.getWidth() * .33);
+    auto stretchBounds = modifyVizBounds.removeFromLeft(modifyVizBounds.getWidth() * .5);
+    auto fadeOutBounds = modifyVizBounds;
+
+    auto reverseBounds = bounds.removeFromLeft(bounds.getWidth() * .25);
+    auto preDelayBounds = bounds.removeFromLeft(bounds.getWidth() * .66); 
+    auto tempoBounds = bounds;
+
     tone->setBounds(toneBounds);
     feedback->setBounds(feedbackBounds);
     mix->setBounds(mixBounds);
+    fadeIn->setBounds(fadeInBounds);
+    stretch->setBounds(stretchBounds);
+    fadeOut->setBounds(fadeOutBounds);
+    reverse.setBounds(reverseBounds);
+    preDelay.setBounds(preDelayBounds);
+    tempo.setBounds(tempoBounds);
+    power.setBounds(powerBounds);
+    gumroad.setBounds(gumroadBounds);
     dragAndDrop.setBounds(visualizerBounds);
 }
 
@@ -62,18 +121,30 @@ void AudioPluginAudioProcessorEditor::updateRSWL()
     auto &toneParam = kitik::getParam(audioProcessor.apvts, "tone");
     auto &feedbackParam = kitik::getParam(audioProcessor.apvts, "feedback");
     auto &mixParam = kitik::getParam(audioProcessor.apvts, "mix");
+    auto &fadeInParam = kitik::getParam(audioProcessor.apvts, "fadeIn");
+    auto &stretchParam = kitik::getParam(audioProcessor.apvts, "stretch");
+    auto &fadeOutParam = kitik::getParam(audioProcessor.apvts, "fadeOut");
 
     tone = std::make_unique<kitik::RotarySliderWithLabels>(&toneParam, "Sections", "tone");
     feedback = std::make_unique<kitik::RotarySliderWithLabels>(&feedbackParam, "", "feedback");
     mix = std::make_unique<kitik::RotarySliderWithLabels>(&mixParam, "", "mix");
+    fadeIn = std::make_unique<kitik::RotarySliderWithLabels>(&fadeInParam, "Fade In", "fadeIn");
+    stretch = std::make_unique<kitik::RotarySliderWithLabels>(&stretchParam, "Stretch", "stretch");
+    fadeOut = std::make_unique<kitik::RotarySliderWithLabels>(&fadeOutParam, "Fade Out", "fadeOut");
 
     makeAttachment(toneAT, audioProcessor.apvts, "tone", *tone);
     makeAttachment(feedbackAT, audioProcessor.apvts, "feedback", *feedback);
     makeAttachment(mixAT, audioProcessor.apvts, "mix", *mix);
+    makeAttachment(fadeInAT, audioProcessor.apvts, "fadeIn", *fadeIn);
+    makeAttachment(stretchAT, audioProcessor.apvts, "stretch", *stretch);
+    makeAttachment(fadeOutAT, audioProcessor.apvts, "fadeOut", *fadeOut);
 
     addLabelPairs(tone->labels, 1, 3, toneParam, "");
-    addLabelPairs(feedback->labels, 1, 3, feedbackParam, "");
-    addLabelPairs(mix->labels, 1, 3, mixParam, "");
+    addLabelPairs(feedback->labels, 1, 3, feedbackParam, "%");
+    addLabelPairs(mix->labels, 1, 3, mixParam, "%");
+    addLabelPairs(fadeIn->labels, 1, 3, fadeInParam, "%");
+    addLabelPairs(stretch->labels, 1, 3, stretchParam, "%");
+    addLabelPairs(fadeOut->labels, 1, 3, fadeOutParam, "%");
 
     tone.get()->onValueChange = [this, &toneParam]()
     {
@@ -81,10 +152,22 @@ void AudioPluginAudioProcessorEditor::updateRSWL()
     };
     feedback.get()->onValueChange = [this, &feedbackParam]()
     {
-        addLabelPairs(feedback->labels, 1, 3, feedbackParam, "");
+        addLabelPairs(feedback->labels, 1, 3, feedbackParam, "%");
     };
     mix.get()->onValueChange = [this, &mixParam]()
     {
-        addLabelPairs(mix->labels, 1, 3, mixParam, "");
+        addLabelPairs(mix->labels, 1, 3, mixParam, "%");
+    };
+    fadeIn.get()->onValueChange = [this, &fadeInParam]()
+    {
+        addLabelPairs(fadeIn->labels, 1, 3, fadeInParam, "%");
+    };
+    stretch.get()->onValueChange = [this, &stretchParam]()
+    {
+        addLabelPairs(stretch->labels, 1, 3, stretchParam, "%");
+    };
+    fadeOut.get()->onValueChange = [this, &fadeOutParam]()
+    {
+        addLabelPairs(fadeOut->labels, 1, 3, fadeOutParam, "%");
     };
 }

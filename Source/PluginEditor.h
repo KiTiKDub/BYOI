@@ -30,10 +30,16 @@ private:
     juce::URL url{ "https://kwhaley5.gumroad.com/" };
     juce::HyperlinkButton gumroad{ "Gumroad", url };
 
-    juce::TextButton openBrowser{"Open Browser"};
+    std::unique_ptr<kitik::RotarySliderWithLabels> tone, feedback, mix, fadeIn, stretch, fadeOut;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneAT, feedbackAT, mixAT, fadeInAT, stretchAT, fadeOutAT;
 
-    std::unique_ptr<kitik::RotarySliderWithLabels> tone, feedback, mix;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> toneAT, feedbackAT, mixAT;
+    juce::Slider preDelay{juce::Slider::SliderStyle::LinearBar, juce::Slider::TextEntryBoxPosition::NoTextBox};
+    juce::AudioProcessorValueTreeState::SliderAttachment preDelayAT;
+
+    juce::DrawableButton reverse{"Reverse", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}, tempo{"Tempo", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}; 
+    juce::ToggleButton power;
+    juce::AudioProcessorValueTreeState::ButtonAttachment reverseAT, tempoAT, powerAT;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
 };

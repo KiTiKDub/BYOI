@@ -23,6 +23,7 @@ AudioPluginAudioProcessor::AudioPluginAudioProcessor()
     mix = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("mix"));
 
     reverse = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("reverse"));
+    tempo = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("tempo"));
     power = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("power"));
 
     manager.registerBasicFormats();
@@ -170,7 +171,7 @@ void AudioPluginAudioProcessor::getStateInformation (juce::MemoryBlock& destData
 
 void AudioPluginAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    auto tree = juce::ValueTree::readFromData(data, static_cast<size_t>(sizeInBytes));
     if (tree.isValid())
         apvts.replaceState(tree);
 }
@@ -196,6 +197,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"mix",1}, "Mix", zeroToOneRange, 1));
 
     layout.add(std::make_unique<AudioParameterBool>(ParameterID{"reverse",1}, "Reverse", false));
+    layout.add(std::make_unique<AudioParameterBool>(ParameterID{"tempo",1}, "Tempo", false));
     layout.add(std::make_unique<AudioParameterBool>(ParameterID{"power",1}, "Power", true));
 
 
@@ -230,10 +232,6 @@ void AudioPluginAudioProcessor::setMonoWaveform()
     waveformMono.copyFrom(0, 0, waveform, 0, 0, waveform.getNumSamples());
     waveformMono.applyGain(.5f);
     waveformMono.addFrom(0,0, waveform, 1, 0, waveform.getNumSamples(), .5f);
-
-    auto leftTest = waveform.getSample(0,3000);
-    auto rightTest = waveform.getSample(1,3000);
-    auto monoTest = waveformMono.getSample(0,3000);
 
     writeMonoToFile();
 }

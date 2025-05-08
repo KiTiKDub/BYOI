@@ -68,6 +68,7 @@ private:
     juce::AudioParameterFloat* mix{nullptr};
     
     juce::AudioParameterBool* reverse{nullptr};
+    juce::AudioParameterBool* tempo{nullptr};
     juce::AudioParameterBool* power{nullptr};
 
     std::unique_ptr<juce::AudioFormatReader> reader{ nullptr };
