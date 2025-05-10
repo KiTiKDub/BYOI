@@ -5,7 +5,7 @@
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p)
     : AudioProcessorEditor(&p), audioProcessor(p), preDelayAT(audioProcessor.apvts, "predelay", preDelay),
       reverseAT(audioProcessor.apvts, "reverse", reverse), tempoAT(audioProcessor.apvts, "tempo", tempo),
-      powerAT(audioProcessor.apvts, "power", power) 
+      powerAT(audioProcessor.apvts, "power", power)
 {
     setLookAndFeel(&lnf);
     updateRSWL();
@@ -72,7 +72,7 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (25.0f);
     g.drawFittedText ("BYOI", masterBounds, juce::Justification::centredTop, 1);
 
-    g.drawLine(0,175,getWidth(),175,1.f);
+    g.drawLine(0,155,getWidth(),155,1.f);
     g.drawLine(0,350,getWidth(),350,1.f);
 
 }
@@ -81,11 +81,11 @@ void AudioPluginAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
 
-    auto visualizerBounds = bounds.removeFromTop(175);
-    auto masterBounds = visualizerBounds.removeFromTop(25);
+    auto visualizerBounds = bounds.removeFromTop(180);
+    auto masterBounds = visualizerBounds.removeFromTop(30);
     auto knobBounds = bounds.removeFromBottom(75);
 
-    auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .2);
+    auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .1);
     auto gumroadBounds = masterBounds.removeFromRight(masterBounds.getWidth() * .25);
 
     auto toneBounds = knobBounds.removeFromLeft(knobBounds.getWidth() * .33);
@@ -98,9 +98,19 @@ void AudioPluginAudioProcessorEditor::resized()
     auto stretchBounds = modifyVizBounds.removeFromLeft(modifyVizBounds.getWidth() * .5);
     auto fadeOutBounds = modifyVizBounds;
 
+    bounds.removeFromTop(bounds.getHeight() * .25);
+    bounds.removeFromBottom(bounds.getHeight() * .33);
+
     auto reverseBounds = bounds.removeFromLeft(bounds.getWidth() * .25);
-    auto preDelayBounds = bounds.removeFromLeft(bounds.getWidth() * .66); 
+    reverseBounds.removeFromLeft(reverseBounds.getWidth() * .25);
+    reverseBounds.removeFromRight(reverseBounds.getWidth() * .33);
+    auto preDelayBounds = bounds.removeFromLeft(bounds.getWidth() * .66);
     auto tempoBounds = bounds;
+    tempoBounds.removeFromLeft(tempoBounds.getWidth() * .25);
+    tempoBounds.removeFromRight(tempoBounds.getWidth() * .33);
+
+    auto font = juce::Font();
+    gumroad.setFont(font, false);
 
     tone->setBounds(toneBounds);
     feedback->setBounds(feedbackBounds);

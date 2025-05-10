@@ -47,11 +47,13 @@ add_library(FFTConvolver_lib STATIC #THE libary needs to be all lower case
     ${fftc_SOURCE_DIR}/TwoStageFFTConvolver.cpp
     ${fftc_SOURCE_DIR}/TwoStageFFTConvolver.h
     ${fftc_SOURCE_DIR}/Utilities.cpp
-    ${fftc_SOURCE_DIR}/Utilities.h 
-)                       
+    ${fftc_SOURCE_DIR}/Utilities.h
+)
 
 # Make sure you include any new source files here
 set(SourceFiles
+    Source/GUI/BYOILnf.cpp
+    Source/GUI/BYOILnf.h
     Source/GUI/DragAndDrop.cpp
     Source/GUI/DragAndDrop.h
     Source/PluginEditor.cpp
@@ -71,12 +73,12 @@ juce_add_plugin(${PROJECT_NAME}
     JUCE_VST3_CAN_REPLACE_VST2 FALSE
     COPY_PLUGIN_AFTER_BUILD TRUE
     NEEDS_WEB_BROWSER FALSE
-    PLUGIN_MANUFACTURER_CODE 
-    PLUGIN_CODE 
+    PLUGIN_MANUFACTURER_CODE
+    PLUGIN_CODE
     FORMATS "${FORMATS}"
     PRODUCT_NAME "BYOI"
     LV2URI https://github.com/KiTiKDub/BYOI.git
-    LV2_SHARED_LIBARARY_NAME BYOI        
+    LV2_SHARED_LIBARARY_NAME BYOI
 )
 
 # How we want our SourceFiles to appear in our IDE
@@ -96,7 +98,7 @@ set_target_properties(FFTConvolver_lib PROPERTIES POSITION_INDEPENDENT_CODE TRUE
 
 target_include_directories(kitik-utils PUBLIC ${kitik-utility_SOURCE_DIR})
 target_include_directories(FFTConvolver_lib PUBLIC ${fftc_SOURCE_DIR})
-target_link_libraries(kitik-utils PUBLIC 
+target_link_libraries(kitik-utils PUBLIC
     juce::juce_audio_basics
     juce::juce_audio_devices
     juce::juce_audio_formats

@@ -181,10 +181,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     using namespace juce;
     AudioProcessorValueTreeState::ParameterLayout layout;
     auto zeroToOneRange = NormalisableRange<float>(0,1,.01);
-    auto stretchRange = NormalisableRange<float>(.5,2, .01);
-    auto predealyRangeNEEDSFIXING = NormalisableRange<float>(0,5000,.01); //this needs to change to be more logarithmic, will come back later. skew may fix
-    auto toneRange = NormalisableRange<float>(-1,1,.01); //Subject to change
-    auto feedbackRange = NormalisableRange<float>(-1,1,.01); //just in case tone changes
+    auto stretchRange = NormalisableRange<float>(25, 400, .01);
+    auto predealyRangeNEEDSFIXING = NormalisableRange<float>(0,5000,.01,.3f); //this needs to change to be more logarithmic, will come back later. skew may fix
+    auto toneRange = NormalisableRange<float>(-100,100,1); //Subject to change
+    auto feedbackRange = NormalisableRange<float>(-100,100,1); //just in case tone changes
 
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeIn",1}, "Fade In", zeroToOneRange, 0));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeOut",1}, "Fade Out", zeroToOneRange, 0));

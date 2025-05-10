@@ -3,7 +3,7 @@
 #include "PluginProcessor.h"
 #include "BinaryData.h"
 #include "juce_core/juce_core.h"
-#include "KitikUtility/GUI/LookAndFeel.h"
+#include "GUI/BYOILnf.h"
 #include "KitikUtility/GUI/RotarySliderWithLabels.h"
 #include "GUI/DragAndDrop.h"
 
@@ -23,7 +23,7 @@ private:
 
     AudioPluginAudioProcessor& audioProcessor;
 
-    kitik::Laf lnf;
+    BYOI_lnf lnf;
 
     DragAndDropComp dragAndDrop{ audioProcessor };
 
@@ -36,7 +36,7 @@ private:
     juce::Slider preDelay{juce::Slider::SliderStyle::LinearBar, juce::Slider::TextEntryBoxPosition::NoTextBox};
     juce::AudioProcessorValueTreeState::SliderAttachment preDelayAT;
 
-    juce::DrawableButton reverse{"Reverse", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}, tempo{"Tempo", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}; 
+    juce::DrawableButton reverse{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}, tempo{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground};
     juce::ToggleButton power;
     juce::AudioProcessorValueTreeState::ButtonAttachment reverseAT, tempoAT, powerAT;
 
