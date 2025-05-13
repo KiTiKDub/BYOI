@@ -1,16 +1,22 @@
 #include "PluginProcessor.h"
+#include "juce_gui_basics/juce_gui_basics.h"
+#include <memory>
 #include "PluginEditor.h"
 
 //==============================================================================
 AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudioProcessor &p)
     : AudioProcessorEditor(&p), audioProcessor(p), preDelayAT(audioProcessor.apvts, "predelay", preDelay),
       reverseAT(audioProcessor.apvts, "reverse", reverse), tempoAT(audioProcessor.apvts, "tempo", tempo),
-      powerAT(audioProcessor.apvts, "power", power)
+      powerAT(audioProcessor.apvts, "power", power), startIRAT(audioProcessor.apvts, "startIR", startIR),
+      endIRAT(audioProcessor.apvts,"endIR", endIR)
 {
     setLookAndFeel(&lnf);
     updateRSWL();
     setSize (300, 425);
     power.setComponentID("Power");
+    startIR.setComponentID("Trim Left");
+    endIR.setComponentID("Trim Right");
+    upload.setButtonText("Upload IR");
 
     if (const auto svg = juce::XmlDocument::parse(BinaryData::reverse_svg))
     {
@@ -34,6 +40,23 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
         }
     }
 
+    upload.onStateChange = [this, &p](){
+
+        chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
+
+        auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+
+        chooser->launchAsync(folderChooserFlags, [this, &p](const juce::FileChooser &myChooser)
+        {
+          auto audioFile = myChooser.getResult();
+          if(audioFile.exists())
+          {
+            p.loadAndSaveFile(audioFile.getFullPathName());
+            repaint();
+          }
+        });
+    };
+
     addAndMakeVisible(*tone);
     addAndMakeVisible(*feedback);
     addAndMakeVisible(*mix);
@@ -46,6 +69,9 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     addAndMakeVisible(power);
     addAndMakeVisible(gumroad);
     addAndMakeVisible(dragAndDrop);
+    addAndMakeVisible(startIR);
+    addAndMakeVisible(endIR);
+    addAndMakeVisible(upload);
 }
 
 AudioPluginAudioProcessorEditor::~AudioPluginAudioProcessorEditor()
@@ -62,8 +88,9 @@ void AudioPluginAudioProcessorEditor::paint (juce::Graphics& g)
     g.fillAll(juce::Colours::black);
 
     auto masterBounds = getLocalBounds().removeFromTop(25);
-    auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .2);
-    auto gumroadBounds = masterBounds.removeFromRight(masterBounds.getWidth() * .25);
+    /*auto powerBounds */ masterBounds.removeFromLeft(masterBounds.getWidth() * .2);
+    /*auto gumroadBounds =*/ masterBounds.removeFromRight(masterBounds.getWidth() * .25);
+    /*auto textBounds =*/ masterBounds.removeFromRight(masterBounds.getWidth()* .25);
 
     auto logo = juce::ImageCache::getFromMemory(BinaryData::KITIK_LOGO_NO_BKGD_png, BinaryData::KITIK_LOGO_NO_BKGD_pngSize);
     //g.drawImage(logo, getLocalBounds().toFloat(), juce::RectanglePlacement::centred);
@@ -87,6 +114,7 @@ void AudioPluginAudioProcessorEditor::resized()
 
     auto powerBounds = masterBounds.removeFromLeft(masterBounds.getWidth() * .1);
     auto gumroadBounds = masterBounds.removeFromRight(masterBounds.getWidth() * .25);
+    auto uploadBounds = masterBounds.removeFromRight(masterBounds.getWidth()*.25);
 
     auto toneBounds = knobBounds.removeFromLeft(knobBounds.getWidth() * .33);
     auto feedbackBounds = knobBounds.removeFromLeft(knobBounds.getWidth() * .5);
@@ -109,6 +137,14 @@ void AudioPluginAudioProcessorEditor::resized()
     tempoBounds.removeFromLeft(tempoBounds.getWidth() * .25);
     tempoBounds.removeFromRight(tempoBounds.getWidth() * .33);
 
+    auto leftVisualizer = visualizerBounds;
+    leftVisualizer.removeFromRight(leftVisualizer.getWidth() * .5);
+    leftVisualizer.setHeight(leftVisualizer.getHeight() * 1.05);
+
+    auto rightVisualizer = visualizerBounds;
+    rightVisualizer.removeFromLeft(rightVisualizer.getWidth() * .5);
+    rightVisualizer.setHeight(rightVisualizer.getHeight() * 1.05);
+
     auto font = juce::Font();
     gumroad.setFont(font, false);
 
@@ -123,7 +159,10 @@ void AudioPluginAudioProcessorEditor::resized()
     tempo.setBounds(tempoBounds);
     power.setBounds(powerBounds);
     gumroad.setBounds(gumroadBounds);
+    startIR.setBounds(leftVisualizer);
     dragAndDrop.setBounds(visualizerBounds);
+    endIR.setBounds(rightVisualizer);
+    upload.setBounds(uploadBounds);
 }
 
 void AudioPluginAudioProcessorEditor::updateRSWL()

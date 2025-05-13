@@ -1,55 +1,63 @@
 #include "BYOILnf.h"
 #include "juce_core/juce_core.h"
-
-// void BYOI_lnf::drawDrawableButton (juce::Graphics& g, juce::DrawableButton& button,
-//                                          bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
-// {
-//     bool toggleState = button.getToggleState();
-
-//     g.fillAll (toggleState ? juce::Colours::black : juce::Colour(64u, 194u, 230u));
-
-//     const int textH = (button.getStyle() == juce::DrawableButton::ImageAboveTextLabel)
-//                         ? juce::jmin (16, button.proportionOfHeight (0.25f))
-//                         : 0;
-
-//     if (textH > 0)
-//     {
-//         g.setFont ((float) textH);
-
-//         g.setColour (toggleState ? juce::Colours::black : juce::Colour(64u, 194u, 230u)
-//                         .withMultipliedAlpha (button.isEnabled() ? 1.0f : 0.4f));
-
-//         g.drawFittedText (button.getButtonText(),
-//                           2, button.getHeight() - textH - 1,
-//                           button.getWidth() - 4, textH,
-//                           juce::Justification::centred, 1);
-//     }
-// }
+#include "juce_graphics/juce_graphics.h"
 
 void BYOI_lnf::drawLinearSlider(juce::Graphics& g, int x, int y, int width, int height, float sliderPos, float minSliderPos, float maxSliderPos, const juce::Slider::SliderStyle style, juce::Slider& slider)
 {
     using namespace juce;
 
-    if (slider.isBar()) //Need to reduce size to add name
+    if (slider.isBar())
     {
-        float sliderHeight = slider.getHeight();
-        g.setColour(juce::Colour(64u, 194u, 230u));
-        g.fillRect(slider.isHorizontal() ? Rectangle<float>(static_cast<float> (x) -1.f, 0 +.5f, sliderPos - (float)x + 1, (float)(sliderHeight))
-            : Rectangle<float>((float)x + 0.5f, sliderPos, (float)width - 1.0f, (float)y + ((float)height - sliderPos)));
+        if(slider.getComponentID() == "Trim Left" || slider.getComponentID() == "Trim Right")
+        {
+            float drawTrimOnWhichSide;
 
-        auto valueRect = juce::Rectangle<float>(0, 0 + 1, width, height);
-        auto nameRect = juce::Rectangle<float>(0, 0, slider.getWidth(), sliderHeight);
+            g.setColour(Colours::whitesmoke);
+            float length = height * .95;
+            g.drawLine(sliderPos - static_cast<float>(x) + 1, .5f, sliderPos - static_cast<float>(x) + 1, length);
 
-        auto valueStr = slider.textFromValueFunction(slider.getValue());
-        auto name = static_cast<juce::String>(slider.getName());
+            Rectangle<float> trim;
+            auto trimLength = g.getCurrentFont().getStringWidthFloat("Trim");
+            auto boxWidth = trimLength * 1.25;
+            if(slider.getComponentID() == "Trim Left")
+            {
+                drawTrimOnWhichSide = sliderPos;
+                if(sliderPos + boxWidth >= width)
+                    drawTrimOnWhichSide = sliderPos - boxWidth;
+            }
+            else if(slider.getComponentID() == "Trim Right")
+            {
+                drawTrimOnWhichSide = sliderPos - boxWidth;
+                if(sliderPos - boxWidth <= 0 )
+                    drawTrimOnWhichSide = sliderPos;
+            }
+            else{drawTrimOnWhichSide = 0;}
+            trim.setBounds(drawTrimOnWhichSide,length *.9, boxWidth, height * .1);
+            g.fillRoundedRectangle(trim,2);
+            g.setColour(Colours::black);
+            g.drawFittedText("Trim", trim.toNearestInt(), Justification::centred, 1);
+        }
+        else
+        {
+            float sliderHeight = slider.getHeight();
+            g.setColour(juce::Colour(64u, 194u, 230u));
+            g.fillRect(slider.isHorizontal() ? Rectangle<float>(static_cast<float> (x) -1.f, 0 +.5f, sliderPos - (float)x + 1, (float)(sliderHeight))
+                : Rectangle<float>((float)x + 0.5f, sliderPos, (float)width - 1.0f, (float)y + ((float)height - sliderPos)));
 
-        auto font = g.getCurrentFont();
-        g.setColour(juce::Colours::white);
-        g.setFont(sliderHeight/2);
-        g.drawFittedText(name, nameRect.toNearestInt(), juce::Justification::topLeft, 1);
-        g.drawFittedText(valueStr, valueRect.toNearestInt(), juce::Justification::centred, 1);
+            auto valueRect = juce::Rectangle<float>(0, 0 + 1, width, height);
+            auto nameRect = juce::Rectangle<float>(0, 0, slider.getWidth(), sliderHeight);
 
-        drawLinearSliderOutline(g, x, y, width, height, style, slider);
+            auto valueStr = slider.textFromValueFunction(slider.getValue());
+            auto name = static_cast<juce::String>(slider.getName());
+
+            auto font = g.getCurrentFont();
+            g.setColour(juce::Colours::white);
+            g.setFont(sliderHeight/2);
+            g.drawFittedText(name, nameRect.toNearestInt(), juce::Justification::topLeft, 1);
+            g.drawFittedText(valueStr, valueRect.toNearestInt(), juce::Justification::centred, 1);
+
+            drawLinearSliderOutline(g, x, y, width, height, style, slider);
+        }
     }
     else
     {

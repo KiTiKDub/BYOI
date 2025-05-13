@@ -1,5 +1,6 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
+#include "juce_core/juce_core.h"
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -140,7 +141,7 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
+    juce::ignoreUnused (midiMessages, buffer);
 
     if(!power->get())
         return;
@@ -149,6 +150,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     auto totalNumInputChannels  = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+    juce::ignoreUnused(totalNumInputChannels, totalNumOutputChannels);
 }
 
 //==============================================================================
@@ -180,7 +182,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
 {
     using namespace juce;
     AudioProcessorValueTreeState::ParameterLayout layout;
-    auto zeroToOneRange = NormalisableRange<float>(0,1,.01);
+    auto zeroToOneRange = NormalisableRange<float>(0,100,.01);
     auto stretchRange = NormalisableRange<float>(25, 400, .01);
     auto predealyRangeNEEDSFIXING = NormalisableRange<float>(0,5000,.01,.3f); //this needs to change to be more logarithmic, will come back later. skew may fix
     auto toneRange = NormalisableRange<float>(-100,100,1); //Subject to change
@@ -189,12 +191,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout AudioPluginAudioProcessor::c
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeIn",1}, "Fade In", zeroToOneRange, 0));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"fadeOut",1}, "Fade Out", zeroToOneRange, 0));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"startIR",1}, "Start Position", zeroToOneRange, 0));
-    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"endIR",1}, "End Position", zeroToOneRange, 1));
-    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"stretch",1}, "Stretch", stretchRange, 1));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"endIR",1}, "End Position", zeroToOneRange, 100));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"stretch",1}, "Stretch", stretchRange, 100));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"predelay",1}, "preDelay Range", predealyRangeNEEDSFIXING, 0));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"tone",1}, "Tone", toneRange, 0));
     layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"feedback",1}, "Feedback", feedbackRange, 0));
-    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"mix",1}, "Mix", zeroToOneRange, 1));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"mix",1}, "Mix", zeroToOneRange, 100));
 
     layout.add(std::make_unique<AudioParameterBool>(ParameterID{"reverse",1}, "Reverse", false));
     layout.add(std::make_unique<AudioParameterBool>(ParameterID{"tempo",1}, "Tempo", false));

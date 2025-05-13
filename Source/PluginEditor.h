@@ -6,6 +6,7 @@
 #include "GUI/BYOILnf.h"
 #include "KitikUtility/GUI/RotarySliderWithLabels.h"
 #include "GUI/DragAndDrop.h"
+#include "juce_gui_basics/juce_gui_basics.h"
 
 //==============================================================================
 class AudioPluginAudioProcessorEditor final : public juce::AudioProcessorEditor
@@ -38,8 +39,13 @@ private:
 
     juce::DrawableButton reverse{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}, tempo{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground};
     juce::ToggleButton power;
+    juce::ToggleButton upload{"Uplaod"};
     juce::AudioProcessorValueTreeState::ButtonAttachment reverseAT, tempoAT, powerAT;
 
+    juce::Slider startIR{juce::Slider::SliderStyle::LinearBar, juce::Slider::TextEntryBoxPosition::NoTextBox},
+                 endIR{juce::Slider::SliderStyle::LinearBar, juce::Slider::TextEntryBoxPosition:: NoTextBox};
+    juce::AudioProcessorValueTreeState::SliderAttachment startIRAT, endIRAT;
 
+    std::unique_ptr<juce::FileChooser> chooser;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessorEditor)
 };

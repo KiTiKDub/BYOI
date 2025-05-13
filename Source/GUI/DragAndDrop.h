@@ -16,27 +16,27 @@ struct DragAndDropComp : public juce::Component, public juce::FileDragAndDropTar
 
 private:
 
-    std::unique_ptr<juce::FileChooser> chooser;
+    // std::unique_ptr<juce::FileChooser> chooser;
 
-    void mouseDoubleClick(const juce::MouseEvent &event) override
-    {
-      juce::ignoreUnused(event);
-      
-      chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
+    // void mouseDoubleClick(const juce::MouseEvent &event) override
+    // {
+    //   juce::ignoreUnused(event);
 
-      auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+    //   chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
 
-      chooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser &myChooser)
-      {
-        auto audioFile = myChooser.getResult();
-        if(audioFile.exists())
-        {
-          audioProcessor.loadAndSaveFile(audioFile.getFullPathName());
-          repaint();
-        }
-      });
-      
-    }
+    //   auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+
+    //   chooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser &myChooser)
+    //   {
+    //     auto audioFile = myChooser.getResult();
+    //     if(audioFile.exists())
+    //     {
+    //       audioProcessor.loadAndSaveFile(audioFile.getFullPathName());
+    //       repaint();
+    //     }
+    //   });
+
+    // }
 
     AudioPluginAudioProcessor& audioProcessor;
 
