@@ -141,14 +141,16 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages, buffer);
+    juce::ignoreUnused (midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
 
     if(!power->get() || !monoHasFile)
         return;
 
-    juce::AudioBuffer<float> irProcessed = buffer;
+    juce::AudioBuffer<float> irProcessed;
+
+    irProcessed.makeCopyOf(buffer);
 
     auto numConvSample = waveformMono.getNumSamples();
     convolver.init(static_cast<size_t>(buffer.getNumSamples()),
@@ -161,7 +163,7 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         convolver.process(buffer.getReadPointer(ch), irProcessed.getWritePointer(ch), static_cast<size_t>(buffer.getNumSamples()));
     }
 
-    buffer = irProcessed;
+    buffer.makeCopyOf(irProcessed);
 }
 
 //==============================================================================
