@@ -2,7 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
-// #include 
+#include <TwoStageFFTConvolver.h>
 
 //==============================================================================
 class AudioPluginAudioProcessor final : public juce::AudioProcessor
@@ -54,6 +54,7 @@ public:
 
 private:
 
+    fftconvolver::TwoStageFFTConvolver convolver;
     void setMonoWaveform();
     void writeMonoToFile();
 
@@ -66,7 +67,7 @@ private:
     juce::AudioParameterFloat* tone{nullptr};
     juce::AudioParameterFloat* feedback{nullptr};
     juce::AudioParameterFloat* mix{nullptr};
-    
+
     juce::AudioParameterBool* reverse{nullptr};
     juce::AudioParameterBool* tempo{nullptr};
     juce::AudioParameterBool* power{nullptr};
@@ -76,6 +77,7 @@ private:
     juce::AudioBuffer<float> waveform;
     juce::AudioBuffer<float> waveformMono;
     juce::File audioFile;
+    bool monoHasFile = false;
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginAudioProcessor)
 };

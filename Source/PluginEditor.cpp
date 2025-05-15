@@ -40,7 +40,7 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
         }
     }
 
-    upload.onStateChange = [this, &p](){
+    upload.onClick = [this, &p](){
 
         chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
 
@@ -69,8 +69,8 @@ AudioPluginAudioProcessorEditor::AudioPluginAudioProcessorEditor(AudioPluginAudi
     addAndMakeVisible(power);
     addAndMakeVisible(gumroad);
     addAndMakeVisible(dragAndDrop);
-    addAndMakeVisible(startIR);
-    addAndMakeVisible(endIR);
+    // addAndMakeVisible(startIR);
+    // addAndMakeVisible(endIR);
     addAndMakeVisible(upload);
 }
 

@@ -142,15 +142,26 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused (midiMessages, buffer);
-
-    if(!power->get())
-        return;
-
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
-    auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    juce::ignoreUnused(totalNumInputChannels, totalNumOutputChannels);
+    if(!power->get() || !monoHasFile)
+        return;
+
+    juce::AudioBuffer<float> irProcessed = buffer;
+
+    auto numConvSample = waveformMono.getNumSamples();
+    convolver.init(static_cast<size_t>(buffer.getNumSamples()),
+                   static_cast<size_t>(numConvSample - buffer.getNumSamples()),
+                   waveformMono.getReadPointer(0),
+                   static_cast<size_t>(numConvSample));
+
+    for(int ch = 0; ch < totalNumInputChannels; ++ch)
+    {
+        convolver.process(buffer.getReadPointer(ch), irProcessed.getWritePointer(ch), static_cast<size_t>(buffer.getNumSamples()));
+    }
+
+    buffer = irProcessed;
 }
 
 //==============================================================================
@@ -254,6 +265,8 @@ void AudioPluginAudioProcessor::writeMonoToFile()
         0));
     if (writer != nullptr)
         writer->writeFromAudioSampleBuffer(waveformMono, 0, waveformMono.getNumSamples());
+
+    monoHasFile = true;
 }
 
 juce::File AudioPluginAudioProcessor::getMonoImpulseLocation()
@@ -263,7 +276,7 @@ juce::File AudioPluginAudioProcessor::getMonoImpulseLocation()
     #elif JUCE_MAC
         auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("KiTiK Music");
     #elif JUCE_LINUX
-        auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("KiTiK Music");
+        auto kitikFolder = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("KiTiK Music");
     #endif
 
     auto pluginFolder = kitikFolder.getChildFile("BYOI");

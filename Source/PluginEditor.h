@@ -39,7 +39,7 @@ private:
 
     juce::DrawableButton reverse{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground}, tempo{"", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground};
     juce::ToggleButton power;
-    juce::ToggleButton upload{"Uplaod"};
+    juce::TextButton upload{"Uplaod"};
     juce::AudioProcessorValueTreeState::ButtonAttachment reverseAT, tempoAT, powerAT;
 
     juce::Slider startIR{juce::Slider::SliderStyle::LinearBar, juce::Slider::TextEntryBoxPosition::NoTextBox},
