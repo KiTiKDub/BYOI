@@ -106,6 +106,8 @@ void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
     juce::ignoreUnused (sampleRate, samplesPerBlock);
+
+    // convolverSingle.reset();
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -150,20 +152,18 @@ void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     juce::AudioBuffer<float> irProcessed;
 
-    irProcessed.makeCopyOf(buffer);
+    irProcessed.setSize(2, getBlockSize());
+    irProcessed.clear();
 
-    auto numConvSample = waveformMono.getNumSamples();
-    convolver.init(static_cast<size_t>(buffer.getNumSamples()),
-                   static_cast<size_t>(numConvSample - buffer.getNumSamples()),
-                   waveformMono.getReadPointer(0),
-                   static_cast<size_t>(numConvSample));
+    convolverSingle.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
+    convolverSingle.process(buffer.getReadPointer(1), irProcessed.getWritePointer(1), static_cast<size_t>(buffer.getNumSamples()));
 
-    for(int ch = 0; ch < totalNumInputChannels; ++ch)
-    {
-        convolver.process(buffer.getReadPointer(ch), irProcessed.getWritePointer(ch), static_cast<size_t>(buffer.getNumSamples()));
-    }
+    // convolver.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
+    // convolver.process(buffer.getReadPointer(1), irProcessed.getWritePointer(1), static_cast<size_t>(buffer.getNumSamples()));
 
-    buffer.makeCopyOf(irProcessed);
+    //convolver.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
+
+    buffer = irProcessed;
 }
 
 //==============================================================================
@@ -268,6 +268,15 @@ void AudioPluginAudioProcessor::writeMonoToFile()
     if (writer != nullptr)
         writer->writeFromAudioSampleBuffer(waveformMono, 0, waveformMono.getNumSamples());
 
+    convolverSingle.reset();
+    convolver.reset();
+
+    auto test = convolver.init(static_cast<size_t>(getBlockSize()),
+                               static_cast<size_t>(8192),
+                               waveformMono.getReadPointer(0),
+                               static_cast<size_t>(waveformMono.getNumSamples()));
+
+    convolverSingle.init(static_cast<size_t>(getBlockSize()), waveformMono.getReadPointer(0), static_cast<size_t>(waveformMono.getNumSamples()));
     monoHasFile = true;
 }
 

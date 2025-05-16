@@ -55,6 +55,7 @@ public:
 private:
 
     fftconvolver::TwoStageFFTConvolver convolver;
+    fftconvolver::FFTConvolver convolverSingle;
     void setMonoWaveform();
     void writeMonoToFile();
 
