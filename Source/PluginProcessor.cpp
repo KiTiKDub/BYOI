@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include "juce_core/juce_core.h"
+#include "juce_dsp/juce_dsp.h"
 
 //==============================================================================
 AudioPluginAudioProcessor::AudioPluginAudioProcessor()
@@ -103,11 +104,14 @@ void AudioPluginAudioProcessor::changeProgramName (int index, const juce::String
 //==============================================================================
 void AudioPluginAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumInputChannels());
 
-    // convolverSingle.reset();
+    convolver.reset();
+    convolver.prepare(spec);
+
 }
 
 void AudioPluginAudioProcessor::releaseResources()
@@ -143,27 +147,20 @@ bool AudioPluginAudioProcessor::isBusesLayoutSupported (const BusesLayout& layou
 void AudioPluginAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
-    juce::ignoreUnused (midiMessages);
     juce::ScopedNoDenormals noDenormals;
     auto totalNumInputChannels  = getTotalNumInputChannels();
 
+    juce::ignoreUnused (midiMessages, totalNumInputChannels);
     if(!power->get() || !monoHasFile)
         return;
 
     juce::AudioBuffer<float> irProcessed;
 
-    irProcessed.setSize(2, getBlockSize());
-    irProcessed.clear();
+    auto block = juce::dsp::AudioBlock<float>(buffer);
+    auto context = juce::dsp::ProcessContextReplacing<float>(block);
 
-    convolverSingle.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
-    convolverSingle.process(buffer.getReadPointer(1), irProcessed.getWritePointer(1), static_cast<size_t>(buffer.getNumSamples()));
+    convolver.process(context);
 
-    // convolver.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
-    // convolver.process(buffer.getReadPointer(1), irProcessed.getWritePointer(1), static_cast<size_t>(buffer.getNumSamples()));
-
-    //convolver.process(buffer.getReadPointer(0), irProcessed.getWritePointer(0), static_cast<size_t>(buffer.getNumSamples()));
-
-    buffer = irProcessed;
 }
 
 //==============================================================================
@@ -268,16 +265,7 @@ void AudioPluginAudioProcessor::writeMonoToFile()
     if (writer != nullptr)
         writer->writeFromAudioSampleBuffer(waveformMono, 0, waveformMono.getNumSamples());
 
-    convolverSingle.reset();
-    convolver.reset();
-
-    auto test = convolver.init(static_cast<size_t>(getBlockSize()),
-                               static_cast<size_t>(8192),
-                               waveformMono.getReadPointer(0),
-                               static_cast<size_t>(waveformMono.getNumSamples()));
-
-    convolverSingle.init(static_cast<size_t>(getBlockSize()), waveformMono.getReadPointer(0), static_cast<size_t>(waveformMono.getNumSamples()));
-    monoHasFile = true;
+    convolver.loadImpulseResponse(file, juce::dsp::Convolution::Stereo::no, juce::dsp::Convolution::Trim::no, 0);
 }
 
 juce::File AudioPluginAudioProcessor::getMonoImpulseLocation()

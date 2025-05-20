@@ -2,8 +2,7 @@
 
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_formats/juce_audio_formats.h>
-#include <TwoStageFFTConvolver.h>
-
+#include <juce_dsp/juce_dsp.h>
 //==============================================================================
 class AudioPluginAudioProcessor final : public juce::AudioProcessor
 {
@@ -54,8 +53,7 @@ public:
 
 private:
 
-    fftconvolver::TwoStageFFTConvolver convolver;
-    fftconvolver::FFTConvolver convolverSingle;
+    juce::dsp::Convolution convolver;
     void setMonoWaveform();
     void writeMonoToFile();
 
